@@ -94,6 +94,7 @@ reslr_load <- function(data,
     # }
     # else{
     data <- data %>% dplyr::mutate(data_type_id = "ProxyRecord")
+
     data <- clean_tidal_gauge_data(
       data = data,
       list_preferred_TGs = list_preferred_TGs,
@@ -256,9 +257,11 @@ reslr_load <- function(data,
   )
   data_age_boundary_max <- data %>%
     dplyr::group_by(SiteName) %>%
-    dplyr::slice_max(Age) %>%
+    #dplyr::slice_max(Age) %>%
+    dplyr::slice_max(Age,with_ties = FALSE) %>%
     dplyr::reframe(
-      max_Age = Age + Age_err
+      #max_Age = Age + Age_err
+      max_Age = round(Age + Age_err, digits = 3)
     )
   data_age_boundary_min <- data %>%
     dplyr::group_by(SiteName) %>%
@@ -306,7 +309,8 @@ reslr_load <- function(data,
   if(cross_val == TRUE){
     # Test set
     test_set <- test_set %>%
-      dplyr::mutate(test_set = "test_set")
+      dplyr::mutate(test_set = "test_set",
+                    SiteName = as.factor(paste0(Site, ",", "\n", " ", Region)))
     # Joining my test set with the data_grid to do a pred vs true plot
     data_grid <- rbind(data_grid,test_set) %>%  dplyr::arrange(Age)
     data_grid <- data_grid %>%
